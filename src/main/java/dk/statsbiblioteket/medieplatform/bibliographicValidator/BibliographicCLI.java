@@ -40,7 +40,7 @@ public class BibliographicCLI {
             = new Option("ffprobe", true, "The ffprobe file");
 
     private static Options options;
-    private static DateFormat ourDateFormat = new SimpleDateFormat("yyyyMMddHHmmss");
+    private static DateFormat ourDateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ");
     private  static long fluff;
 
 
