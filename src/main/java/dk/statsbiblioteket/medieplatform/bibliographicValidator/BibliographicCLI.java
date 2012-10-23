@@ -4,6 +4,7 @@ import dk.statsbiblioteket.util.xml.DOM;
 import dk.statsbiblioteket.util.xml.XPathSelector;
 import org.apache.commons.cli.*;
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -80,9 +81,19 @@ public class BibliographicCLI {
         temp = cmd.getOptionValue(FFPROBE.getOpt());
         Document doc = DOM.streamToDOM(new FileInputStream(temp),false);
         XPathSelector xpath = DOM.createXPathSelector("", "");
-        String durationString = xpath.selectString(doc, "/ffprobe/format/@duration");
-        long millisecondsActual = Math.round(Double.parseDouble(durationString) * 1000);
-        if (millisecondsActual+fluff > millisecondsExpected && millisecondsActual-fluff < millisecondsExpected){
+        NodeList durationsNodeList = xpath.selectNodeList(doc, "/ffprobe/streams/stream/@duration");
+        boolean valid = true;
+
+        long millisecondsActual = 0;
+        for (int i = 0; i < durationsNodeList.getLength(); i++) {
+            String durationString = durationsNodeList.item(i).getTextContent();
+            millisecondsActual = Math.round(Double.parseDouble(durationString) * 1000);
+            if (millisecondsActual+fluff <= millisecondsExpected || millisecondsActual-fluff >= millisecondsExpected) {
+                valid = false;
+                break;
+            }
+        }
+        if (valid){
             System.out.println("{\"valid\":true}");
         } else {
             System.out.println("File failed, duration from ffprobe = "+millisecondsActual + " but reported to be = "+millisecondsExpected);
