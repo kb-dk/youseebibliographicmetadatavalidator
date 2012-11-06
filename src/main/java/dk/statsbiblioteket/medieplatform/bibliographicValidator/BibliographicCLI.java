@@ -6,16 +6,12 @@ import org.apache.commons.cli.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 /**
  * Created with IntelliJ IDEA.
@@ -45,6 +41,7 @@ public class BibliographicCLI {
     private static Options options;
     private static DateFormat ourDateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ");
     private  static long fluff;
+    private static final SimpleDateFormat CROSSCHECK_TIME_FORMAT = new SimpleDateFormat("HH:mm:ss.SSS");
 
     public static void main(String... args) throws java.text.ParseException, FileNotFoundException, ParseException {
 
@@ -102,9 +99,10 @@ public class BibliographicCLI {
         xpath = DOM.createXPathSelector("", "");
         durationsNodeList = xpath.selectNodeList(doc, "/tsa-report/stream-information/duration/@value");
 
+        CROSSCHECK_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         for (int i = 0; valid && i < durationsNodeList.getLength(); i++) {
             String durationString = durationsNodeList.item(i).getTextContent();
-            millisecondsActual = Math.round(new SimpleDateFormat("HH:mm:ss.SSS").parse(durationString).getTime());
+            millisecondsActual = CROSSCHECK_TIME_FORMAT.parse(durationString).getTime();
             if (millisecondsActual+fluff <= millisecondsExpected || millisecondsActual-fluff >= millisecondsExpected) {
                 valid = false;
                 break;
