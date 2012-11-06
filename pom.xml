@@ -10,7 +10,7 @@
 
     <groupId>dk.statsbiblioteket.medieplatform</groupId>
     <artifactId>yousee-bibliographic-metadata-validator</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.2</version>
 
     <scm>
         <connection>scm:git:git@github.com:statsbiblioteket/youseebibliographicmetadatavalidator.git</connection>
