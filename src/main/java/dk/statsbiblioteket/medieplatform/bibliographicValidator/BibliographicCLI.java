@@ -39,11 +39,12 @@ public class BibliographicCLI {
 
     protected static final Option FFPROBE
             = new Option("ffprobe", true, "The ffprobe file");
+    private static final Option CROSSCHECK
+            = new Option("crosscheck", true, "The crosscheck file");
 
     private static Options options;
     private static DateFormat ourDateFormat = new SimpleDateFormat("yyyyMMdd'T'HHmmssZ");
     private  static long fluff;
-
 
     public static void main(String... args) throws java.text.ParseException, FileNotFoundException, ParseException {
 
@@ -54,6 +55,7 @@ public class BibliographicCLI {
         options.addOption(STARTIIME);
         options.addOption(ENDTIME);
         options.addOption(FFPROBE);
+        options.addOption(CROSSCHECK);
         options.addOption(FLUFF);
 
         for (Object option : options.getOptions()) {
@@ -81,7 +83,8 @@ public class BibliographicCLI {
         temp = cmd.getOptionValue(FFPROBE.getOpt());
         Document doc = DOM.streamToDOM(new FileInputStream(temp),false);
         XPathSelector xpath = DOM.createXPathSelector("", "");
-        NodeList durationsNodeList = xpath.selectNodeList(doc, "/ffprobe/streams/stream/@duration");
+        // Do not use subtitle stream lengths, can't be trusted.
+        NodeList durationsNodeList = xpath.selectNodeList(doc, "/ffprobe/streams/stream[@codec_type != 'subtitle']/@duration");
         boolean valid = true;
 
         long millisecondsActual = 0;
@@ -93,10 +96,25 @@ public class BibliographicCLI {
                 break;
             }
         }
+
+        temp = cmd.getOptionValue(CROSSCHECK.getOpt());
+        doc = DOM.streamToDOM(new FileInputStream(temp),false);
+        xpath = DOM.createXPathSelector("", "");
+        durationsNodeList = xpath.selectNodeList(doc, "/tsa-report/stream-information/duration/@value");
+
+        for (int i = 0; valid && i < durationsNodeList.getLength(); i++) {
+            String durationString = durationsNodeList.item(i).getTextContent();
+            millisecondsActual = Math.round(new SimpleDateFormat("HH:mm:ss.SSS").parse(durationString).getTime());
+            if (millisecondsActual+fluff <= millisecondsExpected || millisecondsActual-fluff >= millisecondsExpected) {
+                valid = false;
+                break;
+            }
+        }
+
         if (valid){
             System.out.println("{\"valid\":true}");
         } else {
-            System.out.println("File failed, duration from ffprobe = "+millisecondsActual + " but reported to be = "+millisecondsExpected);
+            System.out.println("File failed, duration from ffprobe or crosscheck = " + millisecondsActual + " but expected to be = " + millisecondsExpected);
             System.exit(1);
         }
     }
