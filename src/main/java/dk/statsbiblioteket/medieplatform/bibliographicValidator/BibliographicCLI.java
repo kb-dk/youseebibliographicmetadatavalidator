@@ -97,7 +97,7 @@ public class BibliographicCLI {
         temp = cmd.getOptionValue(CROSSCHECK.getOpt());
         doc = DOM.streamToDOM(new FileInputStream(temp),false);
         xpath = DOM.createXPathSelector("", "");
-        durationsNodeList = xpath.selectNodeList(doc, "/tsa-report/stream-information/duration/@value");
+        durationsNodeList = xpath.selectNodeList(doc, "/tsa-report/stream-information/duration/@value[. != '']");
 
         CROSSCHECK_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         for (int i = 0; valid && i < durationsNodeList.getLength(); i++) {
